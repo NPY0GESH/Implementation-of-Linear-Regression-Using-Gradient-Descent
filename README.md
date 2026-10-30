@@ -8,22 +8,167 @@ To write a program to predict the profit of a city using the linear regression m
 2. Anaconda – Python 3.7 Installation / Jupyter notebook
 
 ## Algorithm
-1. 
-2. 
-3. 
-4. 
+1.Import the required library and read the dataframe.
+
+2.Write a function compute Cost to generate the cost function.
+
+3.Perform iterations of gradient steps with learning rate.
+
+4.Plot the Cost function using Gradient Descent and generate the required graph. 
 
 ## Program:
 ```
-/*
 Program to implement the linear regression using gradient descent.
-Developed by: 
-RegisterNumber:  
-*/
+Developed by: N P Yogesh
+RegisterNumber: 212225240189
+```
+```
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+# Load dataset
+data = pd.read_csv("exp_3_50_Startups.csv")
+
+# Display first few rows
+print("First 5 rows of the dataset:")
+display(data.head())
+```
+<img width="527" height="215" alt="image" src="https://github.com/user-attachments/assets/084dba19-e9b1-4ebe-b096-8ceb5ec7e70a" />
+
+
+```
+# One-hot encode the 'State' column
+data_encoded = pd.get_dummies(data, columns=['State'], drop_first=True)
+
+# Display the encoded dataset
+print("Encoded dataset:")
+display(data_encoded.head())
 ```
 
-## Output:
-![linear regression using gradient descent](sam.png)
+<img width="688" height="210" alt="image" src="https://github.com/user-attachments/assets/36d0d95e-73ca-4592-9c97-e36954e94d4c" />
+
+```
+# Independent features (all columns except Profit)
+X_raw = data_encoded.drop('Profit', axis=1).values
+
+# Target variable (Profit)
+y_raw = data_encoded['Profit'].values.reshape(-1, 1)
+
+print("Shape of features:", X_raw.shape)
+print("Shape of target:", y_raw.shape)
+```
+<img width="417" height="37" alt="image" src="https://github.com/user-attachments/assets/28b0f3b4-7086-4887-b8c7-8989b7cdc9b7" />
+
+```
+X_scaler = StandardScaler()
+y_scaler = StandardScaler()
+
+X = X_scaler.fit_transform(X_raw)
+y = y_scaler.fit_transform(y_raw)
+
+# Add a column of ones to X for bias term
+m = X.shape[0]
+X = np.hstack((np.ones((m, 1)), X))
+print("Shape of X after adding bias term:", X.shape)
+```
+<img width="402" height="26" alt="image" src="https://github.com/user-attachments/assets/759a9348-7957-475c-a0fe-7c33a859991d" />
+
+```
+def compute_cost(X, y, theta):
+    """
+    Compute Mean Squared Error cost.
+    """
+    m = len(y)
+    preds = X.dot(theta)
+    cost = (1 / (2 * m)) * np.sum((preds - y) ** 2)
+    return cost
+```
+```
+def gradient_descent(X, y, learning_rate=0.01, num_iters=2000, tol=1e-8, verbose=False):
+    """
+    Batch Gradient Descent for Linear Regression.
+    """
+    m, n = X.shape
+    theta = np.zeros((n, 1))
+    J_history = []
+
+    prev_cost = compute_cost(X, y, theta)
+
+    for i in range(num_iters):
+        preds = X.dot(theta)
+        errors = preds - y
+        grad = (1 / m) * (X.T.dot(errors))
+        theta -= learning_rate * grad
+
+        cost = compute_cost(X, y, theta)
+        J_history.append(cost)
+
+        if abs(prev_cost - cost) < tol:
+            if verbose:
+                print(f"Converged at iteration {i}")
+            break
+        prev_cost = cost
+
+        if verbose and (i % 500 == 0 or i < 5):
+            print(f"Iteration {i:4d}, Cost: {cost:.6f}")
+
+    return theta, J_history
+```
+```
+alpha = 0.01
+theta, J_hist = gradient_descent(X, y, learning_rate=alpha, num_iters=5000, tol=1e-9, verbose=True)
+
+print("\nLearned Parameters (Theta):")
+print(theta.flatten())
+
+```
+
+<img width="542" height="268" alt="image" src="https://github.com/user-attachments/assets/dda55b1f-40de-49a8-a7c5-0323a9030f6d" />
+
+```
+plt.figure(figsize=(7,4))
+plt.plot(J_hist)
+plt.xlabel('Iterations')
+plt.ylabel('Cost (MSE/2)')
+plt.title('Cost Function Convergence')
+plt.grid(True)
+plt.show()
+```
+
+<img width="427" height="262" alt="image" src="https://github.com/user-attachments/assets/d0a1a2a7-7d84-458e-b1dd-a0e3a17a53d5" />
+
+
+```
+# Create new sample (same feature names as original)
+new_sample = pd.DataFrame([{
+    'R&D Spend': 165349.2,
+    'Administration': 136897.8,
+    'Marketing Spend': 471784.1,
+    'State': 'New York'
+}])
+
+# Apply one-hot encoding
+new_encoded = pd.get_dummies(new_sample, columns=['State'], drop_first=True)
+
+# Align columns with training data (add missing ones as 0)
+new_encoded = new_encoded.reindex(columns=data_encoded.drop('Profit', axis=1).columns, fill_value=0)
+
+# Scale new data
+new_scaled = X_scaler.transform(new_encoded)
+
+# Add bias
+new_design = np.hstack((np.ones((new_scaled.shape[0], 1)), new_scaled))
+
+# Predict (scaled)
+scaled_pred = new_design.dot(theta)
+
+# Inverse transform to original units
+pred_original = y_scaler.inverse_transform(scaled_pred)
+
+print(f"\nPredicted Profit for the new startup: ₹{pred_original[0][0]:,.2f}")
+```
+<img width="1336" height="58" alt="image" src="https://github.com/user-attachments/assets/bdc254cf-fd82-45b2-9c11-0722fab58a5f" />
 
 
 ## Result:
